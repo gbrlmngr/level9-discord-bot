@@ -2,7 +2,8 @@ import { LogLevel, SapphireClient } from '@sapphire/framework';
 import { config } from 'dotenv-cra';
 
 import 'reflect-metadata';
-import '@sapphire/plugin-logger/register';
+import '@sapphire/plugin-logger/register'
+import '@sapphire/plugin-api/register';
 
 process.env.NODE_ENV ??= 'development';
 config();
@@ -15,9 +16,15 @@ const discordClient = new SapphireClient({
     'DIRECT_MESSAGE_TYPING',
   ],
   logger: {
-    level: LogLevel.Debug,
+    level: process.env.NODE_ENV === 'production' ? LogLevel.Info : LogLevel.Debug,
   },
   loadMessageCommandListeners: true,
+  api: {
+    prefix: 'v1/',
+    listenOptions: {
+      port: Number(process.env.APPLICATION_PORT),
+    }
+  }
 });
 
 async function main() {

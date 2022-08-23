@@ -23,11 +23,7 @@ export class VerifySteamSlashCommand extends Command {
     try {
       const dmChannel = await interaction.user.createDM();
       await dmChannel.send({
-        embeds: [{
-          title: 'Steam verification flow',
-          description: 'This is how you verify your Steam account...',
-          url: 'https://www.google.com'
-        }]
+        content: 'Will come up with instructions, eventually...'
       });
 
       await interaction.editReply(`:partying_face: I've just sent you a direct message with the instructions!`);
