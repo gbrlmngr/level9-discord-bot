@@ -12,6 +12,7 @@ const discordClient = new SapphireClient({
   intents: [
     'GUILDS',
     'GUILD_MESSAGES',
+    'GUILD_MEMBERS',
     'DIRECT_MESSAGES',
     'DIRECT_MESSAGE_TYPING',
   ],
