@@ -3,8 +3,17 @@ import { ApplyOptions } from '@sapphire/decorators';
 import { StatusCodes } from 'http-status-codes';
 import { verifyHMAC256Signature } from '../lib/utilities/crypto';
 import { Webhook } from '../lib/constants';
+import { parseIdentity } from '../lib/utilities/webhook';
+import { Configuration } from '../lib/configuration';
+import { constructSteamVerificationEmbed } from '../lib/embeds/steam-verification';
 // import { MessageEmbed, TextChannel } from 'discord.js';
 // import { format } from 'date-fns';
+
+interface IWebhookPayload {
+  identity: string | null;
+  payload: Record<string, any>;
+  timestamp: number;
+}
 
 @ApplyOptions<Route.Options>({
   route: 'steam-verification',
@@ -18,14 +27,42 @@ export class SteamVerificationRoute extends Route {
         req.headers[Webhook.Headers.Signature] as string
       );
 
-      if(!isWebhookSignatureValid) {
+      if (!isWebhookSignatureValid) {
         res.status(StatusCodes.PRECONDITION_FAILED).json({});
         return;
       }
-      
-      // /* TODO: Apply a rate limiter */
-      // const { identity, payload, timestamp } = req.body as any;
-      // const userId = identity.replace('user:', '');
+      /* TODO: Apply a rate limiter */
+
+      const { identity, payload, timestamp } = req.body as IWebhookPayload;
+      const { value: userId } = parseIdentity(identity ?? '');
+
+      const { GuildId, SteamVerification } = Configuration.Webhook;
+      const guild = this.container.client.guilds.cache.get(GuildId);
+      const role = guild?.roles.cache.get(SteamVerification.RoleId);
+      const user = await guild?.members.fetch(userId);
+      const dmChannel = await user?.createDM().catch((_error) => {
+        // throw new CannotDMUserError();
+      });
+
+      if (!guild) {
+        // throw new InvalidGuildError();
+      }
+
+      if (!role) {
+        // throw new InvalidRoleError();
+      }
+
+      if (!user) {
+        // throw new InvalidUserError();
+      }
+
+      const steamVerificationEmbed = constructSteamVerificationEmbed({
+        userId,
+        steamData: payload,
+        timestamp,
+      });
+
+      dmChannel!.send({ embeds: [steamVerificationEmbed] });
 
       // /* TODO: Move hardcoded IDs to .env */
       // const guild = this.container.client.guilds.cache.get('1010555613740277792');
