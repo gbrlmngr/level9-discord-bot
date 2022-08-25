@@ -1,5 +1,7 @@
 import { Command } from '@sapphire/framework';
 import { ApplyOptions } from '@sapphire/decorators';
+import axios from 'axios';
+import { constructAuthenticationUrlForUser } from '../../lib/utilities/webhook';
 
 @ApplyOptions<Command.Options>({
   name: 'verify-steam',
@@ -21,9 +23,13 @@ export class VerifySteamSlashCommand extends Command {
     await interaction.deferReply({ ephemeral: true });
     
     try {
+      const authenticationUrl = constructAuthenticationUrlForUser(interaction.user.id);
+      const steamOpsResponse = await axios.get(authenticationUrl);
+      const url = steamOpsResponse?.data?.redirect_url ?? '';
+
       const dmChannel = await interaction.user.createDM();
       await dmChannel.send({
-        content: 'Will come up with instructions, eventually...'
+        content: `Hey, <@${interaction.user.id}>! To kickstart the Steam verification process, please visit the following link: ${url}.`
       });
 
       await interaction.editReply(`:partying_face: I've just sent you a direct message with the instructions!`);
